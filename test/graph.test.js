@@ -1,0 +1,15 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const {buildGraph}=require('../graph');
+const files=['Articles/A.md','Articles/B.md','Articles/C.md','Articles-old/X.md','Concepts/Shared.md','Concepts/Only.md'].map(path=>({path}));
+const defaults={sourceFolder:'Articles',minimumSources:2,includeUnresolved:true};
+const run=(resolvedLinks={},unresolvedLinks={},settings={})=>buildGraph(files,{resolvedLinks,unresolvedLinks},{...defaults,...settings});
+test('repeated links in one article never qualify',()=>{assert.equal(run({'Articles/A.md':{'Concepts/Shared.md':10}}).concepts.length,0);});
+test('shared concepts retain only referring articles and qualifying edges',()=>{const g=run({'Articles/A.md':{'Concepts/Shared.md':3,'Concepts/Only.md':1},'Articles/B.md':{'Concepts/Shared.md':1}});assert.equal(g.concepts.length,1);assert.equal(g.nodes.length,3);assert.equal(g.edges.length,2);});
+test('folder boundaries and non-article sources are respected',()=>{assert.equal(run({'Articles/A.md':{'Concepts/Shared.md':1},'Articles-old/X.md':{'Concepts/Shared.md':1},'Concepts/Only.md':{'Concepts/Shared.md':1}}).concepts.length,0);});
+test('unresolved heading variants count once per source',()=>{const g=run({}, {'Articles/A.md':{'Missing#one':1,'Missing#two':1},'Articles/B.md':{'Missing.md':1}});assert.equal(g.concepts.length,1);assert.equal(g.concepts[0].sources.size,2);assert.equal(g.nodes.find(n=>n.concept).missing,true);});
+test('missing concepts can be disabled',()=>{assert.equal(run({}, {'Articles/A.md':{Missing:1},'Articles/B.md':{Missing:1}},{includeUnresolved:false}).nodes.length,0);});
+test('self-links and attachments do not contribute',()=>{assert.equal(run({'Articles/A.md':{'Articles/A.md':1,'image.png':1},'Articles/B.md':{'Articles/A.md':1,'image.png':1}}).concepts.length,0);});
+test('threshold and empty folder setting',()=>{const links={'Articles/A.md':{'Concepts/Shared.md':1},'Articles/B.md':{'Concepts/Shared.md':1},'Concepts/Only.md':{'Concepts/Shared.md':1}};assert.equal(run(links,{}, {minimumSources:3}).concepts.length,0);assert.equal(run(links,{}, {minimumSources:3,sourceFolder:''}).concepts.length,1);});
+test('a note can be both a source and a shared concept without duplicate nodes',()=>{const g=run({'Articles/A.md':{'Articles/B.md':1,'Concepts/Shared.md':1},'Articles/C.md':{'Articles/B.md':1,'Concepts/Shared.md':1},'Articles/B.md':{'Concepts/Shared.md':1}});assert.equal(new Set(g.nodes.map(n=>n.id)).size,g.nodes.length);assert.equal(g.nodes.find(n=>n.path==='Articles/B.md').concept,true);});
+test('identical basenames in different folders remain separate',()=>{const fs=[...files,{path:'Other/Shared.md'}];const g=buildGraph(fs,{resolvedLinks:{'Articles/A.md':{'Concepts/Shared.md':1},'Articles/B.md':{'Other/Shared.md':1}},unresolvedLinks:{}},defaults);assert.equal(g.concepts.length,0);});

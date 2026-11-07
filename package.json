@@ -1,0 +1,13 @@
+{
+  "name": "obsidian-shared-connections",
+  "version": "0.3.1",
+  "private": true,
+  "description": "Shared concept graphs for Obsidian",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check main.js && node --check graph.js && node --check network.js",
+    "package": "python3 package.py",
+    "build": "python3 build.py"
+  },
+  "license": "MIT"
+}

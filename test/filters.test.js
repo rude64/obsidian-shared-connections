@@ -1,0 +1,11 @@
+const {test}=require('node:test');const assert=require('node:assert/strict');const {compileQuery,filterGraph}=require('../filters');
+const node={id:'a',path:'Articles/Cultural Heritage.md',tags:['#history/medieval']};
+test('quoted path and filename filters',()=>{assert.equal(compileQuery('path:"Articles" file:"Cultural Heritage"')(node),true);assert.equal(compileQuery('file:Articles')(node),false);});
+test('negative terms and OR',()=>{assert.equal(compileQuery('file:other OR heritage -file:modern')(node),true);assert.equal(compileQuery('heritage -path:Articles')(node),false);});
+test('nested tags and case-insensitive matching',()=>{assert.equal(compileQuery('tag:HISTORY')(node),true);assert.equal(compileQuery('tag:hist')(node),false);});
+test('invalid or unsupported syntax reports errors',()=>{for(const q of ['path:','content:foo','OR foo','foo OR','"unclosed'])assert.throws(()=>compileQuery(q));});
+const graph={nodes:[{id:'a',path:'Article.md'},{id:'b',path:'Heritage.md',concept:true},{id:'c',path:'Other.md'}],edges:[{source:'a',target:'b'},{source:'c',target:'b'}],concepts:[{id:'b'}],sourceCount:2};
+test('search can retain directly linked articles',()=>{const g=filterGraph(graph,{query:'heritage',keepNeighbors:true});assert.equal(g.nodes.length,3);assert.equal(g.edges.length,2);assert.equal(g.sourceCount,2);});
+test('strict filtering hides nodes and drops disconnected matches',()=>{const g=filterGraph(graph,{query:'heritage',keepNeighbors:false});assert.equal(g.nodes.length,0);assert.equal(g.edges.length,0);});
+test('tag metadata can select nodes',()=>{const g=filterGraph(graph,{query:'tag:history',keepNeighbors:true},p=>p==='Heritage.md'?['history']:[]);assert.equal(g.nodes.length,3);});
+test('empty query leaves connected graph intact',()=>{assert.equal(filterGraph(graph,{query:'',keepNeighbors:true}).nodes.length,3);});

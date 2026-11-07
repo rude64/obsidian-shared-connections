@@ -1,0 +1,16 @@
+ .shared-connections { padding: 16px; overflow: auto; }
+.shared-connections .sc-toolbar { display:flex; gap:8px; }
+.shared-connections .sc-help { color:var(--text-muted); font-size:var(--font-smallest); }
+.shared-connections .sc-canvas { width:100%; min-height:420px; height:65vh; border:1px solid var(--background-modifier-border); border-radius:8px; background:var(--background-primary); touch-action:none; }
+.shared-connections .sc-edge { stroke:var(--text-faint); stroke-opacity:.45; }
+.shared-connections .sc-concept { fill:var(--color-blue); }
+.shared-connections .sc-source { fill:var(--text-muted); }
+.shared-connections .sc-missing { stroke:var(--text-normal); stroke-dasharray:3 2; }
+.shared-connections .sc-node { cursor:pointer; }
+.shared-connections .sc-node text { fill:var(--text-normal); font-size:12px; }
+.shared-connections .sc-node:focus circle, .shared-connections .sc-node:hover circle { stroke:var(--text-accent); stroke-width:3; }
+.shared-connections .sc-controls { padding:12px; margin-top:12px; border:1px solid var(--background-modifier-border); border-radius:8px; }
+.shared-connections .sc-controls > details { margin:10px 0; }
+.shared-connections .sc-controls summary { cursor:pointer; font-weight:600; }
+.shared-connections .sc-error { color:var(--text-error); }
+.shared-connections .sc-controls input[type=text] { min-width:200px; }
